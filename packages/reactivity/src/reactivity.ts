@@ -1,9 +1,7 @@
 import { isObject } from '@biu/shared'
 import { ReactiveFlags } from './constants'
-// enum ReactiveFlags {
-//   IS_REACTIVE = '__v_isReactive', // 是否是响应式对象
-//   IS_READONLY = '__v_isReadonly' // 是否是只读对象
-// }
+import { baseHandlers } from './baseHandlers'
+
 
 const reactiveMap = new WeakMap() // 缓存已经代理过的对象
 // 将数据转为响应式
@@ -29,20 +27,7 @@ export function reactive(target: object) {
 
     return reactiveMap.get(target)
   }
-  const proxy = new Proxy(target, {
-    get(target, key, receiver) {
-      if (key === ReactiveFlags.IS_REACTIVE) return true // 判断是否是响应式对象
-
-      const res = Reflect.get(target, key, receiver)
-      console.log('get', key, res)
-      return res
-    },
-    set(target, key, value, receiver) {
-      const res = Reflect.set(target, key, value, receiver)
-      console.log('set', key, value)
-      return res
-    }
-  })
+  const proxy = new Proxy(target, baseHandlers)
   reactiveMap.set(target, proxy) // 缓存代理对象
   return proxy
 }
