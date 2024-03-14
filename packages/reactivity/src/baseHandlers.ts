@@ -1,5 +1,6 @@
 
-import { ReactiveFlags } from "./constants"
+import { ReactiveFlags, TrackOpTypes } from "./constants"
+import { track } from "./effect"
 
 class BaseHandlers implements ProxyHandler<any> {
   get(target: any, key: string | symbol, receiver: any) {
@@ -7,6 +8,7 @@ class BaseHandlers implements ProxyHandler<any> {
 
     const res = Reflect.get(target, key, receiver)
     console.log('get', key, res)
+    track(target, TrackOpTypes.GET, key)
     return res
   }
   set(target: any, key: string | symbol, value: any, receiver: any) {
