@@ -14,14 +14,21 @@ createApp(App).mount('#app');
 (() => {
   let original = { a: 1 }
   const a = reactive(original)
-  const b = reactive(a)
+  // const b = reactive(a)
 
-  // effect(() => {
-  //   console.log(a.a)
-  // })
+  effect(() => {
+    console.log('effect is running')
+    console.log(a.a + 'has changed')
+  })
 
-  setInterval(() => {
-    a.a++
+  setTimeout(() => {
+    a.a = 2
+    a.a = 3
+    setTimeout(() => {
+      a.a = 4
+      a.a = 5
+    }, 1000)
   }, 1000)
-  a.a = 2
+
+
 })()
