@@ -16,18 +16,20 @@ createApp(App).mount('#app');
   const a = reactive(original)
   // const b = reactive(a)
 
-  effect(() => {
+  const runner = effect(() => {
     console.log('effect is running')
     console.log(a.a + 'has changed')
+  }, {
+    scheduler: () => {
+      console.log('scheduler')
+      runner()
+    }
+
   })
 
   setTimeout(() => {
     a.a = 2
-    a.a = 3
-    setTimeout(() => {
-      a.a = 4
-      a.a = 5
-    }, 1000)
+
   }, 1000)
 
 

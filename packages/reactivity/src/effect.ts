@@ -1,5 +1,21 @@
 import { TrackOpTypes, TriggerOpTypes } from "./constants";
 
+export type EffectScheduler = (...args: any[]) => any
+
+export type DebuggerEvent = {
+  effect: ReactiveEffect
+} & DebuggerEventExtraInfo
+
+export type DebuggerEventExtraInfo = {
+}
+
+export interface DebuggerOptions {
+}
+
+export interface ReactiveEffectOptions extends DebuggerOptions {
+  scheduler?: EffectScheduler
+}
+
 export let activeEffect: ReactiveEffect | null = null;
 
 function cleanupEffect(effect: ReactiveEffect) {
@@ -29,7 +45,7 @@ class ReactiveEffect {
   public active = true // 是否为激活状态
   public parent: ReactiveEffect | null = null // 父级effect(嵌套effect时使用)
   public deps: any[] = [] // 依赖收集
-  constructor(public fn: () => void) { }
+  constructor(public fn: () => void, public scheduler?: EffectScheduler) { }
   run() {
     if (!this.active) {
       // 如果不是激活状态，直接返回,不进行依赖收集
@@ -62,9 +78,9 @@ export interface ReactiveEffectRunner<T = any> {
   effect: ReactiveEffect
 }
 
-export function effect(fn: () => void): ReactiveEffectRunner {
+export function effect(fn: () => void, option?: ReactiveEffectOptions): ReactiveEffectRunner {
   // 当收集的依赖变化时，执行fn
-  const _effect = new ReactiveEffect(fn);
+  const _effect = new ReactiveEffect(fn, option?.scheduler);
   _effect.run(); // 执行依赖收集
 
   const runner = _effect.run.bind(_effect) as ReactiveEffectRunner;// 将run方法绑定到effect上
@@ -134,7 +150,12 @@ export function trigger(target: object, operation: TriggerOpTypes, key: string |
         // 如果是当前的effect，不进行触发,防止死循环
         return
       }
-      effect.run()
+      if (effect.scheduler) {
+        // 如果有scheduler，使用scheduler执行effect
+        effect.scheduler(effect)
+      } else {
+        effect.run()
+      }
     })
   }
 }
