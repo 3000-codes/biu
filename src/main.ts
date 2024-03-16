@@ -1,6 +1,6 @@
 import { createApp, defineComponent, createElementVNode as cev } from 'vue'
 // import { effect, reactive } from 'vue'
-import { effect, reactive } from '@biu/reactive'
+import { effect, reactive, computed } from '@biu/reactive'
 
 const App = defineComponent({
   render() {
@@ -16,19 +16,28 @@ createApp(App).mount('#app');
   const a = reactive(original)
   // const b = reactive(a)
 
-  const runner = effect(() => {
-    console.log('effect is running')
-    console.log(a.a + 'has changed')
-  }, {
-    scheduler: () => {
-      console.log('scheduler')
-      runner()
-    }
+  // const runner = effect(() => {
+  //   console.log('effect is running')
+  //   console.log(a.a + 'has changed')
+  // }, {
+  //   scheduler: () => {
+  //     console.log('scheduler')
+  //     runner()
+  //   }
 
+  // })
+
+  const c = computed(() => {
+    const res = a.a + 1
+    console.log('computed is running', res)
+    return res
+  })
+  effect(() => {
+    console.log('c value', c.value)
   })
 
-  setTimeout(() => {
-    a.a = 2
+  setInterval(() => {
+    a.a += 2
 
   }, 1000)
 

@@ -41,7 +41,7 @@ function cleanupEffect(effect: ReactiveEffect) {
   });
   effect.deps.length = 0;
 }
-class ReactiveEffect {
+export class ReactiveEffect {
   public active = true // 是否为激活状态
   public parent: ReactiveEffect | null = null // 父级effect(嵌套effect时使用)
   public deps: any[] = [] // 依赖收集
@@ -124,15 +124,19 @@ export function track(target: object, operation: TrackOpTypes, key: string | sym
     dep = new Set();
     depsMap.set(key, dep);
   }
+  trackEffects(dep)
+  console.log('track', key)
+}
+
+export function trackEffects(dep: Set<ReactiveEffect>) {
+  if (!activeEffect) return
   let shouldTrack = !dep.has(activeEffect); // 是否已经收集过
   if (shouldTrack) {
     dep.add(activeEffect); // 收集依赖
     activeEffect.deps.push(dep); // 将依赖添加到effect中,用于清除依赖，双向收集
     // 因为effect中可能会有多个依赖，所以需要将依赖收集到effect中
     // 一个数据可以被多个effect收集
-
   }
-  console.log('track', key)
 }
 
 export function trigger(target: object, operation: TriggerOpTypes, key: string | symbol, value: any, oldValue: any) {
@@ -144,18 +148,22 @@ export function trigger(target: object, operation: TriggerOpTypes, key: string |
   let effects = depsMap.get(key) // 获取依赖
   if (effects) {
     effects = new Set(effects) // 防止在执行effect时，depsMap被修改
-    // 执行依赖副作用
-    effects.forEach((effect: ReactiveEffect) => {
-      if (effect === activeEffect) {
-        // 如果是当前的effect，不进行触发,防止死循环
-        return
-      }
-      if (effect.scheduler) {
-        // 如果有scheduler，使用scheduler执行effect
-        effect.scheduler(effect)
-      } else {
-        effect.run()
-      }
-    })
+    triggerEffects(effects)
   }
+}
+
+export function triggerEffects(effects: Set<ReactiveEffect>) {
+  // 执行依赖副作用
+  effects.forEach((effect: ReactiveEffect) => {
+    if (effect === activeEffect) {
+      // 如果是当前的effect，不进行触发,防止死循环
+      return
+    }
+    if (effect.scheduler) {
+      // 如果有scheduler，使用scheduler执行effect
+      effect.scheduler(effect)
+    } else {
+      effect.run()
+    }
+  })
 }

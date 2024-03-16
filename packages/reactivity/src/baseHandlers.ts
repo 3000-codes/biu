@@ -1,13 +1,18 @@
 
-import { hasChanged } from "@biu/shared"
+import { hasChanged, isObject } from "@biu/shared"
 import { ReactiveFlags, TrackOpTypes, TriggerOpTypes } from "./constants"
 import { track, trigger } from "./effect"
+import { reactive } from "./reactivity"
 
 class BaseHandlers implements ProxyHandler<any> {
   get(target: any, key: string | symbol, receiver: any) {
     if (key === ReactiveFlags.IS_REACTIVE) return true // 判断是否是响应式对象
 
     const res = Reflect.get(target, key, receiver)
+    if (isObject(res)) {
+      // 如果是对象，递归代理
+      return reactive(res)
+    }
     console.log('get', key, res)
     track(target, TrackOpTypes.GET, key)
     return res

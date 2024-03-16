@@ -14,6 +14,7 @@ export const isMap = (value: unknown): value is Map<any, any> => toRawType(value
 export const isArray = (value: unknown): value is Array<any> => Array.isArray(value)
 export const isSymbol = (value: unknown): value is symbol => typeof value === 'symbol'
 export const isString = (value: unknown): value is string => typeof value === 'string'
+export const isFunction = (value: unknown): value is Function => typeof value === 'function'
 export const isIntegerKey = (key: unknown) => isString(key) // 判断是否是字符串
     && key !== 'NaN' // 不是NaN
     && key[0] !== '-' // 不是负数
