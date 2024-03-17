@@ -2,6 +2,10 @@ import { isObject } from '@biu/shared'
 import { ReactiveFlags } from './constants'
 import { baseHandlers } from './baseHandlers'
 
+type Target = {
+  [ReactiveFlags.IS_REACTIVE]?: boolean
+}
+
 
 const reactiveMap = new WeakMap() // 缓存已经代理过的对象
 // 将数据转为响应式
@@ -30,4 +34,8 @@ export function reactive(target: object) {
   const proxy = new Proxy(target, baseHandlers)
   reactiveMap.set(target, proxy) // 缓存代理对象
   return proxy
+}
+
+export function isReactive<T>(target: T): boolean {
+  return (target as Target)[ReactiveFlags.IS_REACTIVE] === true
 }
