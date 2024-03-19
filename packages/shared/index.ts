@@ -42,3 +42,13 @@ export const extend = Object.assign
 export const NOOP = (...args: unknown[]) => { }
 export const hasChanged = (value: any, oldValue: any): boolean =>
     !Object.is(value, oldValue)
+
+export const warn = (msg: string) => console.error(`[BiU warn]: ${msg}`)
+export const def = function (obj: object, key: string, value: any) {
+    Object.defineProperty(obj, key, {
+        value,
+        enumerable: false, // 不可枚举,同时也将不会被正常显示
+        writable: true,
+        configurable: true
+    })
+}

@@ -1,33 +1,45 @@
+// mutableHandlers
+// mutableCollectionHandlers
 
-import { hasChanged, isObject } from "@biu/shared"
-import { ReactiveFlags, TrackOpTypes, TriggerOpTypes } from "./constants"
-import { track, trigger } from "./effect"
-import { reactive } from "./reactivity"
+import { Target } from "./reactivity";
 
-class BaseHandlers implements ProxyHandler<any> {
-  get(target: any, key: string | symbol, receiver: any) {
-    if (key === ReactiveFlags.IS_REACTIVE) return true // 判断是否是响应式对象
-
-    const res = Reflect.get(target, key, receiver)
-    if (isObject(res)) {
-      // 如果是对象，递归代理
-      return reactive(res)
-    }
-    console.log('get', key, res)
-    track(target, TrackOpTypes.GET, key)
-    return res
+class BaseReactiveHandler implements ProxyHandler<Target> {
+  constructor(
+    protected readonly _isReadonly = false, // 是否为只读
+    protected readonly _isShallow = false, // 是否为浅层代理
+  ) { }
+  get(target: Target, key: string | symbol, receiver: object) {
+    return Reflect.get(target, key, receiver);
   }
-  set(target: any, key: string | symbol, value: any, receiver: any) {
-    const oldValue = target[key]
-    const res = Reflect.set(target, key, value, receiver)
-    console.log('set', key, value)
-    if (hasChanged(value, oldValue)) {
-      // 如果值发生变化，触发依赖更新
-      console.log('trigger', key)
-      trigger(target, TriggerOpTypes.SET, key, value, oldValue)
-    }
-    return res
+  set(target: Target, p: string | symbol, newValue: any, receiver: any): boolean {
+    return Reflect.set(target, p, newValue, receiver);
   }
 }
 
-export const baseHandlers: ProxyHandler<any> = new BaseHandlers()
+class MutableReactiveHandler extends BaseReactiveHandler {
+  constructor(isShallow = false) {
+    super(false, isShallow)
+  }
+}
+
+class ReadonlyReactiveHandler extends BaseReactiveHandler {
+  constructor(isShallow = false) {
+    super(true, isShallow)
+  }
+}
+
+
+export const mutableHandlers: ProxyHandler<object> =
+  new MutableReactiveHandler() // 可变代理处理
+
+export const readonlyHandlers: ProxyHandler<object> =
+  new ReadonlyReactiveHandler() // 只读代理处理
+
+export const shallowReactiveHandlers =
+  new MutableReactiveHandler(true) // 浅层代理处理
+
+/**
+ * Props处理程序在某种意义上是特殊的，它不应该解开顶层的ref（以允许ref被显式传递下去），但是应该保留普通只读对象的响应性。
+ */
+export const shallowReadonlyHandlers =
+  new ReadonlyReactiveHandler(true) // 浅层只读代理处理

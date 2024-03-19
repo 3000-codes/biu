@@ -1,0 +1,1 @@
+export declare const RawSymbol: unique symbol // 唯一标识符
